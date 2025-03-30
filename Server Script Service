@@ -1,0 +1,70 @@
+local PathfindingService = game:GetService("PathfindingService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Waypoints
+local NextWaypoint
+local ReachedConnection
+local BlockedConnection
+
+local function MoveTo(Model, Location)
+	print("Moving!")
+	print(Model)
+	local Path = PathfindingService:CreatePath({
+		AgentCanClimb = true,
+		AgentCanJump = true,
+	})
+
+	local SuccessCompute, ErrorCompute = pcall(function()
+		Path:ComputeAsync(
+			Model.PrimaryPart.Position,
+			Location
+		)
+	end)
+
+	if SuccessCompute and Path.Status == Enum.PathStatus.Success then
+		print("Success Compute!")
+		Waypoints = Path:GetWaypoints()
+		print(Waypoints)
+		
+		ReachedConnection = nil
+		BlockedConnection = nil
+		
+		print(ReachedConnection)
+		print(BlockedConnection)
+
+		BlockedConnection = Path.Blocked:Connect(function(BlockedWaypoint)
+			print("Blocked Path")
+			if BlockedWaypoint >= NextWaypoint then
+				BlockedConnection = nil
+				MoveTo(Location)
+			end
+		end)
+
+		if not ReachedConnection then
+			print("Not Reached Connection")
+			ReachedConnection = Model.Humanoid.MoveToFinished:Connect(function(Reached)
+				print("Finished Move To")
+				if Reached and NextWaypoint < #Waypoints then
+					print("Next Waypoint")
+					NextWaypoint += 1
+					Model.Humanoid:MoveTo(Waypoints[NextWaypoint].Position)
+				else
+					print("Completed")
+					ReachedConnection = nil
+					BlockedConnection = nil
+				end
+			end)
+		end
+
+		NextWaypoint = 2
+		Model.Humanoid:MoveTo(Waypoints[NextWaypoint].Position)
+		print("Moving To Next Waypoint")
+	else
+		warn("No Path Found")
+		warn(ErrorCompute)
+	end
+end
+
+ReplicatedStorage.Pathfinding.OnServerEvent:Connect(function(Player, Model, Location)
+	MoveTo(Model, Location)
+end)
