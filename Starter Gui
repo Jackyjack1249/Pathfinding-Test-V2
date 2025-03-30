@@ -1,0 +1,58 @@
+-- This should be located in StarterGUI
+-- Inside this script should be an Object value named "NPC". Set the value to the MODEL of your NPC Character. Ensure your Model has a valid Primary Part.
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Model = script.NPC.Value
+local Dialog = Model:WaitForChild("Head").Dialog
+
+Dialogs = {
+	Dialog1 = {
+		Name = "Hospital",
+		ResponseDialog = "fine, you're mean",
+		UserDialog = "hospital, grandma, now",
+		
+		Location = Vector3.new(-89.957, 10.945, -150.755)
+	},
+	
+	Dialog2 = {
+		Name = "School",
+		ResponseDialog = "fine, you're mean",
+		UserDialog = "go to the school",
+		
+		Location = Vector3.new(101.015, 11.044, -89.68)
+	},
+	
+	Dialog3 = {
+		Name = "Police",
+		ResponseDialog = "fine, you're mean",
+		UserDialog = "go to the police station",
+
+		Location = Vector3.new(48.784, 10.945, -166.996)
+	},
+}
+
+local function CreateDialog()
+	print("Creating!")
+	print("yea2")
+	for i, v in pairs(Dialogs) do
+		print("bro1")
+		local DialogInstance = Instance.new("DialogChoice")
+		print(i)
+		DialogInstance.Name = Dialogs[i].Name
+		DialogInstance.ResponseDialog = Dialogs[i].ResponseDialog
+		DialogInstance.UserDialog = Dialogs[i].UserDialog
+		
+		DialogInstance.Parent = Dialog
+	end
+end
+
+CreateDialog()
+
+Dialog.DialogChoiceSelected:Connect(function(Player, Choice)
+	for i, v in pairs(Dialogs) do
+		if Dialogs[i].Name == Choice.Name then
+			ReplicatedStorage.Pathfinding:FireServer(Model, Dialogs[i].Location)
+		end
+	end
+end)
